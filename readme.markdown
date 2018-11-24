@@ -130,6 +130,8 @@ You then specify your 'settings JAR' file as a dependency to the
 </build>
 ```
 
+This is not specific to this plugin at all, but do not forget that maven uses all declared `pluginRepository` entries to fetch dependencies for plugins. If the JAR you are getting the pref files from is not present in maven central (which is used by default), then you will need to add a `<pluginRepositories>..</pluginRepositories>` section in your POM or in your `settings.xml` file. 
+
 As the plugin needs to be bound to a Maven lifecycle you also need to
 specify the eclipse-settings-maven-plugin in your build. At the minimum you'll
 need:
