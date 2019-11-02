@@ -1,4 +1,4 @@
-# Eclipse Settings maven-plugin
+# Eclipse Settings maven-plugin [![Build Status](https://travis-ci.org/glhez/eclipse-settings-maven-plugin.svg?branch=master)](https://travis-ci.org/glhez/eclipse-settings-maven-plugin)
 Provide consistent Eclipse IDE settings for your team from a Maven POM.
 The eclipse-settings-maven-plugin will copy formatting, findbugs and other plugin
 settings from a centrally maintained settings JAR to your checked out workspace and
@@ -130,17 +130,23 @@ You then specify your 'settings JAR' file as a dependency to the
 </build>
 ```
 
-This is not specific to this plugin at all, but do not forget that maven uses all declared `pluginRepository` entries to fetch dependencies for plugins. If the JAR you are getting the pref files from is not present in maven central (which is used by default), then you will need to add a `<pluginRepositories>..</pluginRepositories>` section in your POM or in your `settings.xml` file. 
+This is not specific to this plugin at all, but do not forget that maven uses all declared `pluginRepository` entries to fetch dependencies for plugins. If the JAR you are getting the pref files from is not present in maven central (which is used by default), then you will need to add a `<pluginRepositories>..</pluginRepositories>` section in your POM or in your `settings.xml` file.
 
 As the plugin needs to be bound to a Maven lifecycle you also need to
 specify the eclipse-settings-maven-plugin in your build. At the minimum you'll
 need:
 
+- The profile eclipse-settings is activated only if the m2e.version property is defined; which is always the case in Eclipse.
+- No doing so will copy settings for each module in the reactor, rather than those that are effectively imported into Eclipse: this will generate garbage files.
+
 ``` xml
-<build>
-    <plugins>
-        ...
-        <plugin>
+  <profiles>
+    <profile>
+      <id>eclipse-settings</id>
+      <activation> <property> <name>m2e.version</name> </property> </activation>
+      <build>
+        <plugins>
+          <plugin>
             <groupId>org.eclipse.scout</groupId>
             <artifactId>eclipse-settings-maven-plugin</artifactId>
             <executions>
@@ -151,15 +157,15 @@ need:
                 </goals>
               </execution>
             </executions>
-        </plugin>
-        ...
-    </plugins>
-</build>
+          </plugin>
+        </plugins>
+      <profile>
+    </profiles>
 ```
 
 #### Putting the settings in the right place
 
-The *eclipse-settings-maven-plugin* allows you to [move settings files from one
+The *eclipse-settings-maven-plugin* allows you to [copy settings files from one
 location to another][2]. You use that to put each configuration file
 from your settings JAR in the right location:
 
@@ -182,6 +188,18 @@ from your settings JAR in the right location:
                     </file>
                     <!-- and more... -->
                 </additionalConfig>
+
+                <localAdditionalConfig>
+                    <file>
+                        <name>${session.executionRootDirectory}/.settings/org.eclipse.jdt.core.prefs</name>
+                        <location>/org.eclipse.jdt.core.prefs</location>
+                    </file>
+                    <file>
+                        <name>${session.executionRootDirectory}/.settings/org.eclipse.jdt.ui.prefs</name>
+                        <location>/org.eclipse.jdt.ui.prefs</location>
+                    </file>
+                    <!-- and more... -->
+                </localAdditionalConfig>
             </configuration>
             </plugin>
             ...
@@ -189,6 +207,15 @@ from your settings JAR in the right location:
     </pluginManagement>
 </build>
 ```
+
+Both `localAdditionalConfig` and `additionalConfig` does the same: copy the content of file represented by `location` to the file/path represented by `name`.
+
+- `additionalConfig` will resolve files in the class path, requiring one or more plugin dependencies.
+- `localAdditionalConfig`will resolves files in the file system.
+  - `${session.executionRootDirectory}` represents the "current working directory" in which maven is installed. Thus, probably the root.
+  - You should probably use a more stable path (for example, if you compile a subproject, the `${session.executionRootDirectory}` will correspond to the folder in which this project is, not its parent).
+
+Files that could not be copied or were not found will fail with an error.
 
 #### Skipping the plugin execution
 

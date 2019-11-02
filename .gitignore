@@ -8,3 +8,6 @@ bin
 .factorypath
 .project
 .settings/
+
+# remove wrapper JAR (it will download itself)
+.mvn/wrapper/maven-wrapper.jar

@@ -1,0 +1,2 @@
+# ensure EOL is Linux, because even on Windows it fails with CRLF.
+.mvn/wrapper/maven-wrapper.properties eol=lf
